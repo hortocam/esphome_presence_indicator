@@ -1,0 +1,68 @@
+# ESPHome Presence Indicator — ESP32 config
+#
+# NodeMCU-32S switches three colour channels of a 12V LED tally light (black =
+# common +12V, red/yellow/green switched to GND) via NPN low-side transistors.
+# Only ONE colour is ever active, so no current-stacking concern.
+#
+# STATUS: PENDING — initial layout, NOT yet flashed. Pin assignments are
+# PLACEHOLDERS (GPIO_NC). Read the board silkscreen / wiring table first (see
+# the esp32-firmware skill) and set the real pins before building.
+
+substitutions:
+  device_name: presence-indicator
+  friendly_name: Meeting Presence Tally
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+# ############################### NETWORK #################################
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Static IP so monitoring/OTA is predictable. Uncomment + adjust.
+  # manual_ip:
+  #   static_ip: 172.16.20.x
+  #   gateway: 172.16.20.1
+  #   subnet: 255.255.255.0
+  reboot_timeout: 0s
+
+# ############################## MQTT / API ###############################
+# Expose to Home Assistant via the native API (or MQTT discovery). HA is the
+# source of truth — the device just turns the right colour on.
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+logger:
+  level: INFO
+
+# ############################### OUTPUT ##################################
+# NPN low-side switches: GPIO HIGH -> colour ON. No inversion needed.
+# Common-anode tally light (black = +12V; colour wires sink to GND).
+# One NPN (2N3904/2N2222) per colour, 1k base resistor, collector -> colour,
+# emitter -> GND, GPIO -> 1k -> base. Tie the 12V supply GND to ESP32 GND.
+switch:
+  - platform: gpio
+    name: "Tally Red"
+    id: tally_red
+    pin: GPIO_NC          # << PLACEHOLDER - set real GPIO from silkscreen
+
+  - platform: gpio
+    name: "Tally Yellow"
+    id: tally_yellow
+    pin: GPIO_NC          # << PLACEHOLDER
+
+  - platform: gpio
+    name: "Tally Green"
+    id: tally_green
+    pin: GPIO_NC          # << PLACEHOLDER
