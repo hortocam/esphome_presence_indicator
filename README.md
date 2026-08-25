@@ -56,7 +56,7 @@ LICENSE                     # MIT
 
 - [x] Repo scaffold, ESPHome layout
 - [x] Wiring spec (common-anode, NPN low-side) — see `docs/wiring.md`
-- [ ] Verify wiring / set real GPIO pins
+- [x] GPIO pins set (R=GPIO25, Y=GPIO26, G=GPIO27)
 - [ ] Full build + first flash + serial boot log
 - [ ] MuteDeck -> HA integration wired
 - [ ] Enclosure + install

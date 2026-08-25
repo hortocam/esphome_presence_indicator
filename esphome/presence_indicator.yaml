@@ -4,9 +4,9 @@
 # common +12V, red/yellow/green switched to GND) via NPN low-side transistors.
 # Only ONE colour is ever active, so no current-stacking concern.
 #
-# STATUS: PENDING — initial layout, NOT yet flashed. Pin assignments are
-# PLACEHOLDERS (GPIO_NC). Read the board silkscreen / wiring table first (see
-# the esp32-firmware skill) and set the real pins before building.
+# STATUS: pins set (R=GPIO25, Y=GPIO26, G=GPIO27) - NOT yet flashed.
+# GPIO25/26/27 sit on the same header edge as 5V/3V3, so routing to the NPN
+# bases is tidy. See docs/wiring.md for the full circuit.
 
 substitutions:
   device_name: presence-indicator
@@ -55,14 +55,14 @@ switch:
   - platform: gpio
     name: "Tally Red"
     id: tally_red
-    pin: GPIO_NC          # << PLACEHOLDER - set real GPIO from silkscreen
+    pin: GPIO25
 
   - platform: gpio
     name: "Tally Yellow"
     id: tally_yellow
-    pin: GPIO_NC          # << PLACEHOLDER
+    pin: GPIO26
 
   - platform: gpio
     name: "Tally Green"
     id: tally_green
-    pin: GPIO_NC          # << PLACEHOLDER
+    pin: GPIO27

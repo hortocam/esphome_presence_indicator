@@ -45,9 +45,9 @@ signal NPN is plenty.
 |------|----|----|
 | ESP32 GND | 12V supply GND | **must** share ground |
 | 12V + | tally black (COM) | common +12V |
-| GPIO (red) | 1k → base of Q1 | collector → red wire |
-| GPIO (yellow) | 1k → base of Q2 | collector → yellow wire |
-| GPIO (green) | 1k → base of Q3 | collector → green wire |
+| GPIO25 (red) | 1k → base of Q1 | collector → red wire |
+| GPIO26 (yellow) | 1k → base of Q2 | collector → yellow wire |
+| GPIO27 (green) | 1k → base of Q3 | collector → green wire |
 | all emitters | GND | same ground node |
 
 ## Check before powering
