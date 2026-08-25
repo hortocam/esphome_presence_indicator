@@ -76,7 +76,7 @@ automation:
 ```
 
 > **Prefer polling?** The API also exposes `GET /v1/status` on the WorkLaptop
-> (`http://172.16.20.11:3491/v1/status`). A regular HA automation can poll it on
+> (`http://172.16.20.12:3491/v1/status`). A regular HA automation can poll it on
 > an interval and `template.publish` the same sensor. Webhook is lower-latency;
 > polling is simpler if the WorkLaptop can't reach HA or you want to avoid
 > opening a webhook port. MuteDeck listens on all IPs by default; you can
