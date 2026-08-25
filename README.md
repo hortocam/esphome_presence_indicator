@@ -55,9 +55,10 @@ LICENSE                     # MIT
 ## Status
 
 - [x] Repo scaffold, ESPHome layout
-- [x] Wiring spec (common-anode, NPN low-side) — see `docs/wiring.md`
+- [x] Wiring spec (common-anode, low-side STP16NF06L MOSFETs) — see `docs/wiring.md`
 - [x] GPIO pins set (R=GPIO25, Y=GPIO26, G=GPIO27)
-- [ ] Full build + first flash + serial boot log
+- [x] Full build + first flash + adopted in HA
+- [x] All 3 switches verified in HA; nothing lit at power-on/boot (gate pulldowns)
 - [ ] MuteDeck -> HA integration wired
 - [ ] Enclosure + install
 
