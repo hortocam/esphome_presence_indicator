@@ -103,10 +103,9 @@ select:
       {% set c = state_attr('sensor.mutedeck_status', 'call') %}
       {% set m = state_attr('sensor.mutedeck_status', 'mute') %}
       {% set r = state_attr('sensor.mutedeck_status', 'record') %}
-      {% set v = state_attr('sensor.mutedeck_status', 'video') %}
       {% set s = state_attr('sensor.mutedeck_status', 'share') %}
       {% if c != 'active' %} free
-      {% elif r == 'active' or v == 'active' or s == 'active' %} dnd
+      {% elif r == 'active' or s == 'active' %} dnd
       {% elif m == 'active' %} muted
       {% else %} in_meeting
       {% endif %}
@@ -119,10 +118,11 @@ Derivation table:
 | `free` | `call != active` (not in a meeting) |
 | `in_meeting` | `call == active` and not muted |
 | `muted` | `call == active` and `mute == active` |
-| `dnd` | `call == active` and (recording, camera on, or sharing) |
+| `dnd` | `call == active` and (recording or screen-sharing) |
 
-Tweak the `value_template` to taste — e.g. if you'd rather treat camera-on as
-just `in_meeting`, drop `v` from the `dnd` condition.
+`video` (camera) is deliberately **not** treated as its own state — a camera-on
+during a call just reads as `in_meeting`. Tweak the `value_template` to taste,
+e.g. drop `share` too if you don't want screen-sharing to flag `dnd`.
 
 ## 3. State -> colour automation
 
