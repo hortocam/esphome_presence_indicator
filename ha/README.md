@@ -80,7 +80,7 @@ automation in the package.
 | free | green |
 | in_meeting | red |
 | muted | yellow |
-| dnd | green + yellow (idea, parked) |
+| dnd | red + yellow |
 
 To change a mapping, edit the `meeting_state_to_tally` automation in the package
 (Developer Tools → YAML → reload, or Settings → Automations → the automation).

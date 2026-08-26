@@ -166,7 +166,7 @@ Suggested colour mapping (adjust to taste):
 | `free` | green |
 | `in_meeting` | red |
 | `muted` | yellow |
-| `dnd` | green (blink or reuse) — or map `dnd` to the same as `muted` |
+| `dnd` | red + yellow |
 
 Set `restore_mode` on the ESPHome switches so the light returns to its last state
 after a reboot.

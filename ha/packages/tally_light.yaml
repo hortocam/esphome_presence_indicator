@@ -99,13 +99,18 @@ automation:
 
   # -------------------------------------------------------------------------
   # 4. Map the 4-state select to the tally light colours
-  #    free -> green | in_meeting -> red | muted -> yellow | dnd -> green
+  #    free -> green | in_meeting -> red | muted -> yellow | dnd -> red+yellow
+  #    Triggers on state change AND on HA startup so a rebooting device /
+  #    HA picks up the current meeting state (or defaults to the current
+  #    select value) instead of sitting dark until the next change.
   # -------------------------------------------------------------------------
   - id: meeting_state_to_tally
     alias: "Meeting state -> tally light"
     triggers:
       - trigger: state
         entity_id: select.meeting_state
+      - trigger: homeassistant
+        event: start
     actions:
       - choose:
           - conditions:
@@ -134,7 +139,22 @@ automation:
                   entity_id:
                     - switch.meeting_presence_tally_tally_red
                     - switch.meeting_presence_tally_tally_green
+          - conditions:
+              - condition: state
+                entity_id: select.meeting_state
+                state: dnd
+            sequence:
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.meeting_presence_tally_tally_red
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.meeting_presence_tally_tally_yellow
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.meeting_presence_tally_tally_green
         default:
+          # free (or any unhandled state) -> green
           sequence:
             - action: switch.turn_on
               target:
