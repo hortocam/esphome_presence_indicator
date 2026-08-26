@@ -56,6 +56,12 @@ template:
       - name: Meeting State
         unique_id: meeting_state
         options: "{{ ['free', 'in_meeting', 'muted', 'dnd'] }}"
+        select_option:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.mutedeck_webhook
+            data:
+              value: "{{ states('input_text.mutedeck_webhook') }}"
         state: >
           {% set j = states('input_text.mutedeck_webhook') | from_json %}
           {% set c = j.call | default('inactive') %}
