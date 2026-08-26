@@ -51,6 +51,7 @@ ha/
   architecture.md           # How the MuteDeck -> HA -> ESP32 chain fits together
 docs/
   wiring.md                 # Low-side STP16NF06L MOSFET circuit + polarity notes
+  protoboard-layout.md      # Perfboard (PY-5CM×7CM) pad map + build order
 README.md
 LICENSE                     # MIT
 ```
