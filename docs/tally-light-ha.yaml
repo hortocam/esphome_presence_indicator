@@ -132,13 +132,13 @@ automation:
                   entity_id:
                     - switch.tally_red
                     - switch.tally_green
-          - default:
-              sequence:
-                - action: switch.turn_on
-                  target:
-                    entity_id: switch.tally_green
-                - action: switch.turn_off
-                  target:
-                    entity_id:
-                      - switch.tally_red
-                      - switch.tally_yellow
+        default:
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.tally_green
+            - action: switch.turn_off
+              target:
+                entity_id:
+                  - switch.tally_red
+                  - switch.tally_yellow
