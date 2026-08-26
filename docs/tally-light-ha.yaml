@@ -27,63 +27,61 @@
 # 1. Storage for the raw MuteDeck payload
 # ---------------------------------------------------------------------------
 input_text:
-  mutedeck_status:
+  mutedeck_webhook:
     name: MuteDeck Payload
-    max: 1024
+    max: 255
     initial: "{}"
 
 # ---------------------------------------------------------------------------
-# 2. Raw status sensor (state = control, attributes = live fields)
+# 2. Derived sensors + 4-state select (modern `template:` syntax)
+#    Robust to `call` being absent in the webhook — falls back to `control`
+#    (control = "system" when free, the platform name when in a meeting).
 # ---------------------------------------------------------------------------
-sensor:
-  - platform: template
-    name: MuteDeck Status
-    id: mutedeck_status
-    state: >
-      {% set j = states('input_text.mutedeck_status') | from_json %}
-      {{ j.control | default('unknown') }}
-    attributes:
-      call: "{{ (states('input_text.mutedeck_status') | from_json).call | default('inactive') }}"
-      mute: "{{ (states('input_text.mutedeck_status') | from_json).mute | default('inactive') }}"
-      video: "{{ (states('input_text.mutedeck_status') | from_json).video | default('disabled') }}"
-      share: "{{ (states('input_text.mutedeck_status') | from_json).share | default('disabled') }}"
-      record: "{{ (states('input_text.mutedeck_status') | from_json).record | default('disabled') }}"
-      timestamp: "{{ (states('input_text.mutedeck_status') | from_json).timestamp | default('') }}"
+template:
+  - sensor:
+      - name: MuteDeck Status
+        unique_id: mutedeck_status
+        state: >
+          {% set j = states('input_text.mutedeck_webhook') | from_json %}
+          {{ j.control | default('unknown') }}
+        attributes:
+          call: "{{ (states('input_text.mutedeck_webhook') | from_json).call | default('inactive') }}"
+          mute: "{{ (states('input_text.mutedeck_webhook') | from_json).mute | default('inactive') }}"
+          video: "{{ (states('input_text.mutedeck_webhook') | from_json).video | default('disabled') }}"
+          share: "{{ (states('input_text.mutedeck_webhook') | from_json).share | default('disabled') }}"
+          record: "{{ (states('input_text.mutedeck_webhook') | from_json).record | default('disabled') }}"
+          timestamp: "{{ (states('input_text.mutedeck_webhook') | from_json).timestamp | default('') }}"
+
+  - select:
+      - name: Meeting State
+        unique_id: meeting_state
+        options:
+          - free
+          - in_meeting
+          - muted
+          - dnd
+        select_option:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.mutedeck_webhook
+            data:
+              value: "{}"
+        state: >
+          {% set j = states('input_text.mutedeck_webhook') | from_json %}
+          {% set c = j.call | default('inactive') %}
+          {% set control = j.control | default('system') %}
+          {% set m = j.mute | default('inactive') %}
+          {% set r = j.record | default('disabled') %}
+          {% set s = j.share | default('disabled') %}
+          {% set in_meet = (c == 'active') or (control != 'system') %}
+          {% if not in_meet %} free
+          {% elif r == 'active' or s == 'active' %} dnd
+          {% elif m == 'active' %} muted
+          {% else %} in_meeting
+          {% endif %}
 
 # ---------------------------------------------------------------------------
-# 3. Derived 4-state select (single source of truth)
-#    free / in_meeting / muted / dnd
-#    Robust to `call` being absent in the webhook — falls back to `control`.
-# ---------------------------------------------------------------------------
-select:
-  - platform: template
-    name: Meeting State
-    options:
-      - free
-      - in_meeting
-      - muted
-      - dnd
-    select_option:
-      - service: input_text.set_value
-        target: { entity_id: input_text.mutedeck_status }
-        data:
-          value: "{}"
-    value_template: >
-      {% set j = states('input_text.mutedeck_status') | from_json %}
-      {% set c = j.call | default('inactive') %}
-      {% set control = j.control | default('system') %}
-      {% set m = j.mute | default('inactive') %}
-      {% set r = j.record | default('disabled') %}
-      {% set s = j.share | default('disabled') %}
-      {% set in_meet = (c == 'active') or (control != 'system') %}
-      {% if not in_meet %} free
-      {% elif r == 'active' or s == 'active' %} dnd
-      {% elif m == 'active' %} muted
-      {% else %} in_meeting
-      {% endif %}
-
-# ---------------------------------------------------------------------------
-# 4. Ingest automation: webhook -> input_text
+# 3. Ingest automation: webhook -> input_text
 #    URL: http://172.16.10.16:8123/api/webhook/mutedeck_status
 # ---------------------------------------------------------------------------
 automation:
@@ -97,12 +95,12 @@ automation:
     actions:
       - action: input_text.set_value
         target:
-          entity_id: input_text.mutedeck_status
+          entity_id: input_text.mutedeck_webhook
         data:
           value: "{{ trigger.json | to_json }}"
 
   # -------------------------------------------------------------------------
-  # 5. Map the 4-state select to the tally light colours
+  # 4. Map the 4-state select to the tally light colours
   #    free -> green | in_meeting -> red | muted -> yellow | dnd -> green
   # -------------------------------------------------------------------------
   - id: meeting_state_to_tally
