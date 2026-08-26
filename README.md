@@ -43,14 +43,28 @@ firmware.
 
 ```
 esphome/
-  presence_indicator.yaml   # ESPHome device config (switches, pins, WiFi)
+  presence_indicator.yaml   # ESPHome device config (switches, pins, WiFi, API)
   secrets.yaml              # LOCAL-ONLY, gitignored - fill in, never commit
+ha/
+  packages/tally_light.yaml # HA package: webhook, sensor, derived select, automations
+  README.md                 # Step-by-step HA install (3 steps + verify)
+  architecture.md           # How the MuteDeck -> HA -> ESP32 chain fits together
 docs/
-  wiring.md                 # NPN low-side switching + polarity notes
-  home-assistant.md         # MuteDeck webhook -> 4-state entity -> automation
+  wiring.md                 # Low-side STP16NF06L MOSFET circuit + polarity notes
 README.md
 LICENSE                     # MIT
 ```
+
+## Install
+
+Two halves, two hosts:
+
+1. **ESP32:** see `esphome/presence_indicator.yaml` — flash from the Mac
+   (`esphome run ... --device /dev/cu.usbserial-0001`), adopt in HA, paste the
+   native-API encryption key.
+2. **Home Assistant:** follow `ha/README.md` — enable packages, drop in
+   `ha/packages/tally_light.yaml` (as `tally_light.yaml`), point MuteDeck's
+   webhook at `http://172.16.10.16:8123/api/webhook/mutedeck_status`.
 
 ## Status
 
