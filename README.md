@@ -59,7 +59,9 @@ LICENSE                     # MIT
 - [x] GPIO pins set (R=GPIO25, Y=GPIO26, G=GPIO27)
 - [x] Full build + first flash + adopted in HA
 - [x] All 3 switches verified in HA; nothing lit at power-on/boot (gate pulldowns)
-- [ ] MuteDeck -> HA integration wired
+- [x] MuteDeck -> HA integration wired (webhook -> input_text -> sensor + derived select)
+- [x] E2E verified live: Google Meet join -> red, mute -> yellow, hang up -> green
+- [ ] DND state mapping (idea: green+yellow) + how MuteDeck reports DND — parked
 - [ ] Enclosure + install
 
 MIT Licensed — see `LICENSE`.
