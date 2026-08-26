@@ -15,27 +15,45 @@
 # (If MuteDeck can't reach 172.16.10.16:8123 from the WorkLaptop, verify the
 # cross-VLAN firewall allows VLAN20 -> HA. The tally ESP32 is already adopted
 # in HA as switch.tally_red / _yellow / _green.)
+#
+# HOW IT WORKS:
+#   - The webhook is a TRIGGER on the ingest automation (no standalone
+#     `webhook:` integration needed).
+#   - The automation stores the raw payload JSON in input_text.mutedeck_status.
+#   - sensor.mutedeck_status and select.meeting_state DERIVE from that text.
+#   - select.meeting_state is the source of truth for the tally + dashboard.
 
 # ---------------------------------------------------------------------------
-# 1. Webhook endpoint MuteDeck POSTs to
+# 1. Storage for the raw MuteDeck payload
 # ---------------------------------------------------------------------------
-webhook:
-  - meeting_status:
-      webhook_id: mutedeck_status
+input_text:
+  mutedeck_status:
+    name: MuteDeck Payload
+    max: 1024
+    initial: "{}"
 
 # ---------------------------------------------------------------------------
-# 2. Raw MuteDeck status sensor (attributes hold the live fields)
-#    State is published by the ingest automation below.
+# 2. Raw status sensor (state = control, attributes = live fields)
 # ---------------------------------------------------------------------------
 sensor:
   - platform: template
     name: MuteDeck Status
     id: mutedeck_status
+    state: >
+      {% set j = states('input_text.mutedeck_status') | from_json %}
+      {{ j.control | default('unknown') }}
+    attributes:
+      call: "{{ (states('input_text.mutedeck_status') | from_json).call | default('inactive') }}"
+      mute: "{{ (states('input_text.mutedeck_status') | from_json).mute | default('inactive') }}"
+      video: "{{ (states('input_text.mutedeck_status') | from_json).video | default('disabled') }}"
+      share: "{{ (states('input_text.mutedeck_status') | from_json).share | default('disabled') }}"
+      record: "{{ (states('input_text.mutedeck_status') | from_json).record | default('disabled') }}"
+      timestamp: "{{ (states('input_text.mutedeck_status') | from_json).timestamp | default('') }}"
 
 # ---------------------------------------------------------------------------
-# 3. Derived 4-state select (the single source of truth for automations)
-#    Robust to the webhook omitting `call` — falls back to `control`
-#    (control = "system" when free, the platform name when in a meeting).
+# 3. Derived 4-state select (single source of truth)
+#    free / in_meeting / muted / dnd
+#    Robust to `call` being absent in the webhook — falls back to `control`.
 # ---------------------------------------------------------------------------
 select:
   - platform: template
@@ -46,16 +64,17 @@ select:
       - muted
       - dnd
     select_option:
-      - service: template.publish
-        target: { entity_id: select.meeting_state }
+      - service: input_text.set_value
+        target: { entity_id: input_text.mutedeck_status }
         data:
-          state: "{{ option }}"
+          value: "{}"
     value_template: >
-      {% set c = state_attr('sensor.mutedeck_status', 'call') | default('inactive') %}
-      {% set control = state_attr('sensor.mutedeck_status', 'control') | default('system') %}
-      {% set m = state_attr('sensor.mutedeck_status', 'mute') | default('inactive') %}
-      {% set r = state_attr('sensor.mutedeck_status', 'record') | default('disabled') %}
-      {% set s = state_attr('sensor.mutedeck_status', 'share') | default('disabled') %}
+      {% set j = states('input_text.mutedeck_status') | from_json %}
+      {% set c = j.call | default('inactive') %}
+      {% set control = j.control | default('system') %}
+      {% set m = j.mute | default('inactive') %}
+      {% set r = j.record | default('disabled') %}
+      {% set s = j.share | default('disabled') %}
       {% set in_meet = (c == 'active') or (control != 'system') %}
       {% if not in_meet %} free
       {% elif r == 'active' or s == 'active' %} dnd
@@ -64,28 +83,23 @@ select:
       {% endif %}
 
 # ---------------------------------------------------------------------------
-# 4. Ingest: webhook -> raw sensor
+# 4. Ingest automation: webhook -> input_text
+#    URL: http://172.16.10.16:8123/api/webhook/mutedeck_status
 # ---------------------------------------------------------------------------
 automation:
   - id: mutedeck_ingest
-    alias: "MuteDeck webhook -> status sensor"
-    trigger:
-      - platform: webhook
+    alias: "MuteDeck webhook -> status"
+    triggers:
+      - trigger: webhook
         webhook_id: mutedeck_status
-    action:
-      - variables:
-          md: "{{ trigger.json }}"
-      - service: template.publish
-        target: { entity_id: sensor.mutedeck_status }
+        allowed_methods:
+          - POST
+    actions:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.mutedeck_status
         data:
-          state: "{{ md.control }}"
-          attributes:
-            call: "{{ md.call }}"
-            mute: "{{ md.mute }}"
-            video: "{{ md.video }}"
-            share: "{{ md.share }}"
-            record: "{{ md.record }}"
-            timestamp: "{{ md.timestamp }}"
+          value: "{{ trigger.json | to_json }}"
 
   # -------------------------------------------------------------------------
   # 5. Map the 4-state select to the tally light colours
@@ -93,26 +107,44 @@ automation:
   # -------------------------------------------------------------------------
   - id: meeting_state_to_tally
     alias: "Meeting state -> tally light"
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: select.meeting_state
-    action:
+    actions:
       - choose:
-          - conditions: { condition: state, entity_id: select.meeting_state, state: in_meeting }
+          - conditions:
+              - condition: state
+                entity_id: select.meeting_state
+                state: in_meeting
             sequence:
-              - service: switch.turn_on
-                target: { entity_id: switch.tally_red }
-              - service: switch.turn_off
-                target: { entity_id: [switch.tally_yellow, switch.tally_green] }
-          - conditions: { condition: state, entity_id: select.meeting_state, state: muted }
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.tally_red
+              - action: switch.turn_off
+                target:
+                  entity_id:
+                    - switch.tally_yellow
+                    - switch.tally_green
+          - conditions:
+              - condition: state
+                entity_id: select.meeting_state
+                state: muted
             sequence:
-              - service: switch.turn_on
-                target: { entity_id: switch.tally_yellow }
-              - service: switch.turn_off
-                target: { entity_id: [switch.tally_red, switch.tally_green] }
-          - default:   # free / dnd
-            sequence:
-              - service: switch.turn_on
-                target: { entity_id: switch.tally_green }
-              - service: switch.turn_off
-                target: { entity_id: [switch.tally_red, switch.tally_yellow] }
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.tally_yellow
+              - action: switch.turn_off
+                target:
+                  entity_id:
+                    - switch.tally_red
+                    - switch.tally_green
+          - default:
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.tally_green
+                - action: switch.turn_off
+                  target:
+                    entity_id:
+                      - switch.tally_red
+                      - switch.tally_yellow
