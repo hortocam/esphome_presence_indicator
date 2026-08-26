@@ -113,12 +113,12 @@ automation:
             sequence:
               - action: switch.turn_on
                 target:
-                  entity_id: switch.tally_red
+                  entity_id: switch.meeting_presence_tally_tally_red
               - action: switch.turn_off
                 target:
                   entity_id:
-                    - switch.tally_yellow
-                    - switch.tally_green
+                    - switch.meeting_presence_tally_tally_yellow
+                    - switch.meeting_presence_tally_tally_green
           - conditions:
               - condition: state
                 entity_id: select.meeting_state
@@ -126,19 +126,19 @@ automation:
             sequence:
               - action: switch.turn_on
                 target:
-                  entity_id: switch.tally_yellow
+                  entity_id: switch.meeting_presence_tally_tally_yellow
               - action: switch.turn_off
                 target:
                   entity_id:
-                    - switch.tally_red
-                    - switch.tally_green
+                    - switch.meeting_presence_tally_tally_red
+                    - switch.meeting_presence_tally_tally_green
         default:
           sequence:
             - action: switch.turn_on
               target:
-                entity_id: switch.tally_green
+                entity_id: switch.meeting_presence_tally_tally_green
             - action: switch.turn_off
               target:
                 entity_id:
-                  - switch.tally_red
-                  - switch.tally_yellow
+                  - switch.meeting_presence_tally_tally_red
+                  - switch.meeting_presence_tally_tally_yellow
