@@ -1,7 +1,9 @@
 # Meeting Presence Tally — Home Assistant package
 #
-# READY TO DROP IN. Put this file at /config/packages/tally_light.yaml (UNDERSCORES - package filename must be a valid slug)
-# (create the packages/ dir if needed), and enable packages in
+# READY TO DROP IN. Save this file AT /config/packages/tally_light.yaml
+# (underscores, NOT hyphens - a package's filename is its slug, and HA
+# rejects slugs with hyphens, silently dropping the whole package).
+# Create the packages/ dir if needed, and enable packages in
 # configuration.yaml if you don't already use them:
 #
 #   homeassistant:
