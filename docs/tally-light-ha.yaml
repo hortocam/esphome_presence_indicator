@@ -14,7 +14,7 @@
 #
 # (If MuteDeck can't reach 172.16.10.16:8123 from the WorkLaptop, verify the
 # cross-VLAN firewall allows VLAN20 -> HA. The tally ESP32 is already adopted
-# in HA as switch.tally_red / _yellow / _green.)
+# in HA as switch.meeting_presence_tally_tally_{red,yellow,green}.)
 #
 # HOW IT WORKS:
 #   - The webhook is a TRIGGER on the ingest automation (no standalone
