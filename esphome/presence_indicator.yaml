@@ -5,9 +5,11 @@
 # logic-level MOSFETs (STP16NF06L). Only ONE colour is ever active, so no
 # current-stacking concern.
 #
-# STATUS: pins set (R=GPIO25, Y=GPIO26, G=GPIO27) - NOT yet flashed.
-# GPIO25/26/27 sit on the same header edge as 5V/3V3, so routing to the FET
-# gates is tidy. See docs/wiring.md for the full circuit.
+# STATUS: flashed + working (protoboard, mounted on monitor post).
+# Pins: R=GPIO25, Y=GPIO26, G=GPIO27. GPIO25/26/27 sit on the same header
+# edge as 5V/3V3, so routing to the FET gates is tidy. See docs/wiring.md.
+# Boot state: green ALWAYS_ON, red/yellow ALWAYS_OFF -> device boots green
+# (HA's meeting_state automation re-asserts the correct colour on HA start).
 
 substitutions:
   device_name: presence-indicator
@@ -57,13 +59,16 @@ switch:
     name: "Tally Red"
     id: tally_red
     pin: GPIO25
+    restore_mode: ALWAYS_OFF
 
   - platform: gpio
     name: "Tally Yellow"
     id: tally_yellow
     pin: GPIO26
+    restore_mode: ALWAYS_OFF
 
   - platform: gpio
     name: "Tally Green"
     id: tally_green
     pin: GPIO27
+    restore_mode: ALWAYS_ON
